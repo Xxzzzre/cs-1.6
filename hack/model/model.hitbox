@@ -1,0 +1,5 @@
+Display: progresive_nemesis Path: models/player/progresive_nemesis/progresive_nemesis.mdl Hitbox: 3
+Display: progresive_nemesis Path: models/player/progresive_nemesis/progresive_nemesis.mdl Hitbox: 4
+Display: zombie_leech Path: models/player/zombie_leech/zombie_leech.mdl Hitbox: 9
+Display: Fat_Zombie Path: models/player/Fat_Zombie/Fat_Zombie.mdl Hitbox: 8
+Display: Fat_Zombie Path: models/player/Fat_Zombie/Fat_Zombie.mdl Hitbox: 9

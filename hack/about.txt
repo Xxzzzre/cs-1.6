@@ -1,0 +1,43 @@
+**************************************************
+
+Multihack by:[..         [..    [....     [..      
+              [..       [..   [..    [..  [..      
+      [..      [..     [..  [..        [..[..      
+    [.   [..    [..   [..   [..        [..[..      
+   [..... [..    [.. [..    [..        [..[..      
+   [.             [....       [..     [.. [..      
+     [....         [..          [....     [........ and team!
+
+**************************************************
+
+Menu, important things that come to mind.
+
+Rage Aimbot:
+Activate (Will override all other aimbot)
+Always Fire (For special weapon like zm weapon that dont want to fire)
+
+Legit Aimbot:
+Activate (Will override triggerbot)
+
+Other Aimbot:
+Bypass Trace (Some server block trace method, so has two method)
+
+Model:
+The aimbot will automaticly look for bone name "head" and compare to hitbox, if dont match the hitbox will be set to 0(stomach/waist). Some model has not head, and some model can not hit head, so in this menu you can set hitboxes you want to target for each model. The aimbot will target the first hitbox for each model on list but also target the other in list if front is not visible. You can set hitbox 5 6 7 for one model and move up and down changing to 6 5 7 or what ever without reselecting.
+
+Player List:
+In this menu you can select to target all, target on first(dont attack off) or attack only on. You can also select to show esp for only selected on. This was made with intention to use route and speed to kill only selected enemies and play normal like nothing happen after.
+
+Spawn Point:
+For csdm/respawn, if a player is dead and respawning in your map space it will draw point.
+
+Visual1:
+Sound index/ no index, in some server they block player number needed to find name and team, in these server the sound no index will only work.
+
+**************************************************
+Other:
+Texture, the chicken, player and weapon skins can be downloaded from places like gamebanana, there you download .mdl file, this file you open with half life model viewer, and in model viewer you can export the images. Sky you can also download from gamebanana.The wall menu can load upto 1024 textures to play with. Menu item can load up to 50 splitted gif images each.
+**************************************************
+
+If you want to give feedback you can add me to steam:
+https://steamcommunity.com/profiles/76561198446217955/
