@@ -12,8 +12,8 @@ int StudioCheckBBox(void)
 void StudioSetRemapColors(int top, int bottom)
 {
 	cl_entity_s* ent = g_Studio.GetCurrentEntity();
-	Skeleton(ent);
-	Skins(ent);
+	GetHitboxes(ent);
+	SetSkins(ent);
 	g_Studio.StudioSetRemapColors(top, bottom);
 }
 

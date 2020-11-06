@@ -130,9 +130,6 @@
     <ClCompile Include="studiomodelrender.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="skeleton.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="fov.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -197,6 +194,18 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="model.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="resources\gl3winit.cpp">
+      <Filter>resources</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\gl3w.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_impl_opengl3.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="hitboxes.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -330,9 +339,6 @@
     <ClInclude Include="studiomodelrender.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="skeleton.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="fov.h">
       <Filter>source</Filter>
     </ClInclude>
@@ -397,6 +403,18 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="model.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="resources\gl3winit.h">
+      <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\gl3w.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_impl_opengl3.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="hitboxes.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

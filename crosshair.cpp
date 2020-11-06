@@ -177,8 +177,7 @@ void DrawCrossHair()
 		{
 			ColorHSV[0] += 1.0f / Cross.iBarSize;
 			if (ColorHSV[0] > 1.0f) ColorHSV[0] -= 1.0f;
-
-			Vector pos1, pos2;
+			ImVec2 pos1, pos2;
 			float radius = Cross.flCrosshairDistance + i - 1;
 			pos1.x = ImGui::GetIO().DisplaySize.x / 2 - radius * sin(M_PI * 2 * Cross.angle / 360);
 			pos1.y = ImGui::GetIO().DisplaySize.y / 2 - radius * cos(M_PI * 2 * Cross.angle / 360);

@@ -130,11 +130,33 @@ int HUD_Key_Event(int down, int keynum, const char* pszCurrentBinding)
 	return g_Client.HUD_Key_Event(down, keynum, pszCurrentBinding);
 }
 
-void ClearDequeEngine()
+void AntiAfk(usercmd_s* cmd)
 {
-	PlayerAim.deque::clear();
-	for (unsigned int i = 0; i < 33; i++)
-		PlayerAimHitbox[i].deque::clear();
+	int afktime = cvar.afk_time;
+	afktime -= 1;
+	afktime *= 1000;
+	static DWORD antiafk = GetTickCount();
+	static Vector prevorigin;
+	static Vector prevangles;
+	if (bAliveLocal())
+	{
+		if (pmove->origin != prevorigin || cmd->viewangles != prevangles)
+			antiafk = GetTickCount();
+		prevorigin = pmove->origin;
+		prevangles = cmd->viewangles;
+		if (cvar.afk_anti)
+		{
+			if (GetTickCount() - antiafk > afktime)
+			{
+				cmd->buttons |= IN_JUMP;
+				cmd->viewangles[1] += 5;
+				g_Engine.SetViewAngles(cmd->viewangles);
+			}
+
+		}
+	}
+	else
+		antiafk = GetTickCount();
 }
 
 void CL_CreateMove(float frametime, struct usercmd_s* cmd, int active)
@@ -154,7 +176,7 @@ void CL_CreateMove(float frametime, struct usercmd_s* cmd, int active)
 	CustomFOV();
 	WallRun();
 	CrossHair();
-	Spawn();
+	AntiAfk(cmd);
 }
 
 void HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* to, struct usercmd_s* cmd, int runfuncs, double time, unsigned int random_seed)
@@ -265,11 +287,13 @@ int CL_IsThirdPerson(void)
 void HUD_Frame(double time)
 {
 	g_Engine.pNetAPI->Status(&(Status));
+	FindSpawn();
 	LoadWall();
-	ClearDequeEngine();
 	Sky();
 	NoFlash();
 	Lightmap();
+	PlayerAim.deque::clear();;
+	Spawn.deque::clear();
 	g_Client.HUD_Frame(time);
 }
 

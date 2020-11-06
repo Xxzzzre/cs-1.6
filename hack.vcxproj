@@ -166,7 +166,10 @@
     <ClCompile Include="autoroute.cpp" />
     <ClCompile Include="bass\dll.cpp" />
     <ClCompile Include="bass\dll_image.cpp" />
+    <ClCompile Include="imgui\gl3w.cpp" />
+    <ClCompile Include="imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="model.cpp" />
+    <ClCompile Include="resources\gl3winit.cpp" />
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="client.cpp" />
     <ClCompile Include="color.cpp" />
@@ -205,7 +208,7 @@
     <ClCompile Include="resources\stringfinder.cpp" />
     <ClCompile Include="resources\textures.cpp" />
     <ClCompile Include="resources\trace.cpp" />
-    <ClCompile Include="skeleton.cpp" />
+    <ClCompile Include="hitboxes.cpp" />
     <ClCompile Include="skins.cpp" />
     <ClCompile Include="sky.cpp" />
     <ClCompile Include="snapshot.cpp" />
@@ -228,7 +231,10 @@
     <ClInclude Include="autoroute.h" />
     <ClInclude Include="bass\bass.h" />
     <ClInclude Include="bass\dll.h" />
+    <ClInclude Include="imgui\gl3w.h" />
+    <ClInclude Include="imgui\imgui_impl_opengl3.h" />
     <ClInclude Include="model.h" />
+    <ClInclude Include="resources\gl3winit.h" />
     <ClInclude Include="sound.h" />
     <ClInclude Include="client.h" />
     <ClInclude Include="color.h" />
@@ -273,7 +279,7 @@
     <ClInclude Include="resources\stringfinder.h" />
     <ClInclude Include="resources\textures.h" />
     <ClInclude Include="resources\trace.h" />
-    <ClInclude Include="skeleton.h" />
+    <ClInclude Include="hitboxes.h" />
     <ClInclude Include="skins.h" />
     <ClInclude Include="sky.h" />
     <ClInclude Include="snapshot.h" />

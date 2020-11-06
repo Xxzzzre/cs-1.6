@@ -72,8 +72,8 @@ void DrawTraceGrenade()
 	{
 		float VecScreenMin[2], VecScreenMax[2];
 		if (WorldToScreen(Grenade.GrenadePos1, VecScreenMin) && WorldToScreen(Grenade.GrenadePos2, VecScreenMax))
-			ImGui::GetCurrentWindow()->DrawList->AddLine({ VecScreenMin[0], VecScreenMin[1] }, { VecScreenMax[0], VecScreenMax[1] }, Wheel1());
+			ImGui::GetCurrentWindow()->DrawList->AddLine({ IM_ROUND(VecScreenMin[0]), IM_ROUND(VecScreenMin[1]) }, { IM_ROUND(VecScreenMax[0]), IM_ROUND(VecScreenMax[1]) }, Wheel1());
 		if (WorldToScreen(Grenade.GrenadePos2, VecScreenMax))
-			ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ VecScreenMax[0] - 1, VecScreenMax[1] - 1 }, { VecScreenMax[0] + 2, VecScreenMax[1] + 2 }, Wheel2());
+			ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ IM_ROUND(VecScreenMax[0]) - 1, IM_ROUND(VecScreenMax[1]) - 1 }, { IM_ROUND(VecScreenMax[0]) + 2, IM_ROUND(VecScreenMax[1]) + 2 }, Wheel2());
 	}
 }

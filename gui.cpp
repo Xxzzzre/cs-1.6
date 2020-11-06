@@ -12,18 +12,30 @@ LRESULT CALLBACK HOOK_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	return CallWindowProc(hGameWndProc, hWnd, uMsg, wParam, lParam);
 }
 
+bool bOldOpenGL = true; 
+GLint iMajor, iMinor;
 void InistalizeImgui(HDC hdc)
 {
 	if (!bInitializeImGui)
 	{
 		hGameWnd = WindowFromDC(hdc);
 		hGameWndProc = (WNDPROC)SetWindowLong(hGameWnd, GWL_WNDPROC, (LONG)HOOK_WndProc);
+		glGetIntegerv(GL_MAJOR_VERSION, &iMajor);
+		glGetIntegerv(GL_MINOR_VERSION, &iMinor);
+		if ((iMajor * 10 + iMinor) >= 32)
+			bOldOpenGL = false;
 		ImGui::CreateContext();
 		ImGui_ImplWin32_Init(hGameWnd);
-		ImGui_ImplOpenGL2_Init();
+		if (!bOldOpenGL)
+		{
+			ImplementGl3();
+			ImGui_ImplOpenGL3_Init();
+		}
+		else
+			ImGui_ImplOpenGL2_Init();
 		ImGui::StyleColorsDark();
-		ImGui::GetStyle().AntiAliasedFill = false;
-		ImGui::GetStyle().AntiAliasedLines = false;
+		ImGui::GetStyle().AntiAliasedFill = !bOldOpenGL ? true : false;
+		ImGui::GetStyle().AntiAliasedLines = !bOldOpenGL ? true : false;
 		ImGui::GetStyle().FrameRounding = 0.0f;
 		ImGui::GetStyle().WindowRounding = 0.0f;
 		ImGui::GetStyle().ChildRounding = 0.0f;
@@ -109,8 +121,6 @@ void ClearDeque()
 	PlayerBone.deque::clear();
 	PlayerHitbox.deque::clear();
 	PlayerEsp.deque::clear();
-	for (unsigned int i = 0; i < 33; i++)
-		PlayerEspHitboxMulti[i].deque::clear();
 	WorldBone.deque::clear();
 	WorldHitbox.deque::clear();
 	Grenadeline.deque::clear();
@@ -129,7 +139,10 @@ void HookImGui(HDC hdc)
 	if (CheckDraw())
 	{
 		InistalizeImgui(hdc);
-		ImGui_ImplOpenGL2_NewFrame();
+		if (!bOldOpenGL)
+			ImGui_ImplOpenGL3_NewFrame();
+		else
+			ImGui_ImplOpenGL2_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
@@ -138,7 +151,10 @@ void HookImGui(HDC hdc)
 		DrawMenuWindow();
 
 		ImGui::Render();
-		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+		if (!bOldOpenGL)
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		else
+			ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 	}
 	MenuHandle();
 	ClearHudKeys();

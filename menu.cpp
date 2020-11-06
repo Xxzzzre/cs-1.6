@@ -568,6 +568,58 @@ void MenuLegit2()
 	}
 }
 
+void MenuLegit3()
+{
+	ImGui::Text("Hitboxes"), ImGui::Separator();
+
+	for (unsigned int x = 0; x < Model_Aim_Select.size(); x++)
+	{
+		float checksave = 1;
+		for (playeraimlegit_t AimLegit : PlayerAimLegit)
+		{
+			if (!strstr(AimLegit.checkmodel, Model_Aim_Select[x].checkmodel))
+				continue;
+			if (AimLegit.numhitbox != Model_Aim_Select[x].numhitbox)
+				continue;
+			if (AimLegit.m_iWeaponID != CheckWeapon(cvar.menu_legit_global_section, cvar.menu_legit_sub_section))
+				continue;
+			
+			checksave = 0;
+		}
+
+		char str[256];
+		float button = checksave;
+		sprintf(str, "Model:##%d", x);
+		ImGui::Checkbox(str, &button);
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), Model_Aim_Select[x].displaymodel);
+		ImGui::SameLine();
+		ImGui::Text("Hitbox: %d", Model_Aim_Select[x].numhitbox);
+
+		if (checksave && !button)
+		{
+			playeraimlegit_t AimLegit;
+			AimLegit.numhitbox = Model_Aim_Select[x].numhitbox;
+			sprintf(AimLegit.displaymodel, Model_Aim_Select[x].displaymodel);
+			sprintf(AimLegit.checkmodel, Model_Aim_Select[x].checkmodel);
+			AimLegit.m_iWeaponID = CheckWeapon(cvar.menu_legit_global_section, cvar.menu_legit_sub_section);
+			PlayerAimLegit.push_back(AimLegit);
+		}
+		if (!checksave && button)
+		{
+			for (unsigned int i = 0; i < PlayerAimLegit.size(); i++)
+			{
+				if (!strstr(PlayerAimLegit[i].checkmodel, Model_Aim_Select[x].checkmodel))
+					continue;
+				if (PlayerAimLegit[i].numhitbox != Model_Aim_Select[x].numhitbox)
+					continue;
+				PlayerAimLegit.erase(PlayerAimLegit.begin() + i);
+			}
+		}
+	}
+
+}
+
 void MenuModelAim1()
 {
 	ImGui::Text("Scan For Model"), ImGui::Separator();
@@ -764,6 +816,12 @@ void MenuSpawn()
 		ImGui::SameLine();
 		if (ImGui::Button("Save"))
 			SaveSpawn();
+		ImGui::SameLine();
+		ImVec4 prevColor = ImGui::GetStyle().Colors[ImGuiCol_Text];
+		ImGui::GetStyle().Colors[ImGuiCol_Text] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+		if (ImGui::Button("Clear All"))
+			SpawnOrigin.deque::clear();
+		ImGui::GetStyle().Colors[ImGuiCol_Text] = prevColor;
 
 		char str[256];
 		for (unsigned int i = 0; i < SpawnOrigin.size(); i++)
@@ -1274,6 +1332,9 @@ void MenuSettings()
 {
 	ImGui::Text("Settings"), ImGui::Separator();
 
+	ImGui::Checkbox("Anti Afk", &cvar.afk_anti);
+	ImGui::Text("Anti Afk Time");
+	SliderFloat("Anti Afk Time##1", &cvar.afk_time, 15, 90, "%.0f");
 	if (ImGui::Button("Reload cvar.ini")) LoadCvar();
 	if (ImGui::Button("Reload Menu Texture")) loadtexturemenu = true;
 }
@@ -1324,6 +1385,7 @@ void DrawMenuChild(int total)
 {
 	int windowheight1 = 0;
 	int windowheight2 = 0;
+	int windowheight3 = 0;
 	int maxheight = ImGui::GetIO().DisplaySize.y -
 		total;
 
@@ -1339,6 +1401,9 @@ void DrawMenuChild(int total)
 	{
 		windowheight1 = 588;
 		windowheight2 = 600;
+		windowheight3 = 23;
+		for (model_aim_select_t Model_Selected : Model_Aim_Select)
+			windowheight3 += 21;
 	}
 	if (MenuTab == 2)
 	{
@@ -1468,7 +1533,7 @@ void DrawMenuChild(int total)
 	}
 	if (MenuTab == 13)
 	{
-		windowheight1 = 65;
+		windowheight1 = 124;
 	}
 	if (MenuTab == 14)
 	{
@@ -1479,6 +1544,8 @@ void DrawMenuChild(int total)
 		windowheight1 = maxheight;
 	if (maxheight < windowheight2)
 		windowheight2 = maxheight;
+	if (maxheight < windowheight3)
+		windowheight3 = maxheight;
 
 	float menusize = 1;
 	int index = 1;
@@ -1527,6 +1594,7 @@ void DrawMenuChild(int total)
 			if (MenuTab == 14)
 				MenuKey();
 		}
+		ImVec2 windowsize;
 		ImGui::End();
 		if (MenuTab != 4 && MenuTab != 11 && MenuTab != 13 && MenuTab != 14)
 		{
@@ -1560,6 +1628,18 @@ void DrawMenuChild(int total)
 					MenuRoute2();
 				if (MenuTab == 12)
 					MenuSteam2();
+				windowsize = ImGui::GetWindowSize();
+			}
+			ImGui::End();
+		}
+		if (MenuTab == 1 && Model_Aim_Select.size())
+		{
+			ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x / 2 + windowsize.x, 0), ImGuiCond_Always, ImVec2(0, showspeed));
+			ImGui::SetNextWindowSize(ImVec2(0, windowheight3));
+			sprintf(str, "child3%d", MenuTab);
+			ImGui::Begin(str, reinterpret_cast<bool*>(true), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
+			{
+				MenuLegit3();
 			}
 			ImGui::End();
 		}
@@ -1843,7 +1923,6 @@ void DrawMenuWindow()
 		GetTextureMenu("steam", steammaxindex);
 		GetTextureMenu("settings", settingsmaxindex);
 		GetTextureMenu("key", keymaxindex);
-		LoadTextureImageMenu("texture/menu/target/target.png", TARGET);
 		LoadTextureImageMenu("texture/menu/vip/vip.png", VIP);
 		loadtexturemenu = false;
 	}

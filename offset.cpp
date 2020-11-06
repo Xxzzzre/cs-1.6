@@ -6,9 +6,12 @@ AutoOffset c_Offset;
 #define FindMemoryClone(Start, End, Clone, Size) __findmemoryclone((const ULONG)Start, (const ULONG)End, (const ULONG)Clone, (UINT)Size)
 #define FindReference(Start, End, Address) __findreference((const ULONG)Start, (const ULONG)End, (const ULONG)Address)
 
+typedef void* Pointer;
+typedef void** PPointer;
 typedef unsigned Cardinal;
 typedef unsigned* PCardinal;
 typedef unsigned** PPCardinal;
+typedef int** PPLongint;
 
 bool AutoOffset::GetRendererInfo()
 {

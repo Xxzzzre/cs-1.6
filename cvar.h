@@ -198,6 +198,9 @@ public:
 
 	float model_scan;
 
+	float afk_anti;
+	float afk_time;
+
 	float id1;
 	float id2;
 	float id3;

@@ -39,6 +39,7 @@ extern char hldir[256];
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_win32.h"
 #include "imgui/imgui_impl_opengl2.h"
+#include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_internal.h"
 #include "imgui/soil.h"
 #include "imgui/gl.h"
@@ -66,6 +67,7 @@ extern char hldir[256];
 #include "SDK/common/net_api.h"
 #include "SDK/common/con_nprint.h"
 #include "SDK/misc/r_studioint.h"
+#include "SDK/misc/steamtypes.h"
 
 #include "resources/detours.h"
 #include "resources/defs.h"
@@ -74,6 +76,7 @@ extern char hldir[256];
 #include "resources/textures.h"
 #include "resources/parsemsg.h"
 #include "resources/keydefs.h"
+#include "resources/gl3winit.h"
 
 #include "opengl.h"
 #include "usermsg.h"
@@ -97,7 +100,7 @@ extern char hldir[256];
 #include "sound.h"
 #include "skins.h"
 #include "radio.h"
-#include "skeleton.h"
+#include "hitboxes.h"
 #include "fov.h"
 #include "crosshair.h"
 #include "tracegrenade.h"

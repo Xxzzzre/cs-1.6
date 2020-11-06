@@ -1,10 +1,8 @@
 #include "client.h"
 
-Vector DeadOrigin[33];
-DWORD DeadTickcount[33];
-bool WasDead[33];
-
 deque<spawnorigin_t> SpawnOrigin;
+deque<spawndeath_t> SpawnDeath;
+deque<spawn_t> Spawn;
 
 void ResetSpawn()
 {
@@ -17,34 +15,32 @@ void ResetSpawn()
 	}
 }
 		
-void Spawn()
+void FindSpawn()
 {
-	for (unsigned int id = 0; id < 33; id++)
-	{
-		if (WasDead[id])
-		{
-			if (GetTickCount() - DeadTickcount[id] > 1000)
-				WasDead[id] = false;
-		}
-	}
+	if (SpawnDeath.size() && GetTickCount() - SpawnDeath.front().Tickcount > 1500)
+		SpawnDeath.pop_front();
+
 	if (cvar.visual_spawn_scan && cvar.visual_spawn_points)
 	{
-		for (playeraim_t Aim : PlayerAim)
+		for (spawn_t Spawns : Spawn)
 		{
-			if (WasDead[Aim.ent->index])
+			for (unsigned int i = 0; i < SpawnDeath.size(); i++)
 			{
-				if (g_Player[Aim.ent->index].bAliveInScoreTab && Aim.ent->origin != DeadOrigin[Aim.ent->index])
+				if (Spawns.index != SpawnDeath[i].index)
+					continue;
+
+				if (g_Player[Spawns.index].bAliveInScoreTab && Spawns.Origin != SpawnDeath[i].Origin)
 				{
-					Vector vGrondOrigin = Aim.ent->origin;
+					Vector vGrondOrigin = Spawns.Origin;
 					vGrondOrigin[2] -= 8192;
 					pmtrace_t tr;
 					g_pEngine->pEventAPI->EV_SetTraceHull(2);
-					g_Engine.pEventAPI->EV_PlayerTrace(Aim.ent->origin, vGrondOrigin, PM_GLASS_IGNORE | PM_STUDIO_BOX, -1, &tr);
+					g_Engine.pEventAPI->EV_PlayerTrace(Spawns.Origin, vGrondOrigin, PM_GLASS_IGNORE | PM_STUDIO_BOX, -1, &tr);
 					bool bBadOrigin = false;
-					for (spawnorigin_t Spawns : SpawnOrigin)
+					for (spawnorigin_t SpawnOrigins : SpawnOrigin)
 					{
-						float distance = Spawns.Origin.Distance(tr.endpos);
-						if (Aim.ent->origin[0] == Spawns.Origin[0] && Aim.ent->origin[1] == Spawns.Origin[1])
+						float distance = SpawnOrigins.Origin.Distance(tr.endpos);
+						if (Spawns.Origin[0] == SpawnOrigins.Origin[0] && Spawns.Origin[1] == SpawnOrigins.Origin[1])
 						{
 							bBadOrigin = true;
 							break;
@@ -57,13 +53,12 @@ void Spawn()
 					}
 					if (!bBadOrigin)
 					{
-						spawnorigin_t Spawn;
-						Spawn.Origin = tr.endpos;
-						SpawnOrigin.push_back(Spawn);
+						spawnorigin_t SpawnOrigins;
+						SpawnOrigins.Origin = tr.endpos;
+						SpawnOrigin.push_back(SpawnOrigins);
 					}
-					WasDead[Aim.ent->index] = false;
+					SpawnDeath.erase(SpawnDeath.begin() + i);
 				}
-				DeadOrigin[Aim.ent->index] = Aim.ent->origin;
 			}
 		}
 	}
@@ -77,21 +72,18 @@ void DrawSpawn()
 		{
 			Vector vTop = SpawnOrigin[i].Origin;
 			vTop[2] += 32;
-			float vSpawnFrom[2];
-			float vSpawnTo[2];
-			if (WorldToScreen(SpawnOrigin[i].Origin, vSpawnFrom) && WorldToScreen(vTop, vSpawnTo))
+			float SpawnFrom[2], SpawnTo[2];
+			if (WorldToScreen(SpawnOrigin[i].Origin, SpawnFrom) && WorldToScreen(vTop, SpawnTo))
 			{
-				float flRadius = (vSpawnFrom[1] - vSpawnTo[1]) / 10;
-				int x = vSpawnFrom[0], y = vSpawnFrom[1], xx = vSpawnTo[0], yy = vSpawnTo[1];
-				ImGui::GetCurrentWindow()->DrawList->AddLine({ (float)x, (float)y }, { (float)xx, (float)yy }, Green());
-				ImGui::GetCurrentWindow()->DrawList->AddCircleFilled({ (float)xx, (float)yy }, 1 + flRadius, Wheel3());
+				ImGui::GetCurrentWindow()->DrawList->AddLine({ IM_ROUND(SpawnFrom[0]), IM_ROUND(SpawnFrom[1]) }, { IM_ROUND(SpawnTo[0]), IM_ROUND(SpawnTo[1]) }, Green());
+				ImGui::GetCurrentWindow()->DrawList->AddCircleFilled({ IM_ROUND(SpawnTo[0]), IM_ROUND(SpawnTo[1]) }, 1 + IM_ROUND((IM_ROUND(SpawnFrom[1]) - IM_ROUND(SpawnTo[1])) / 10), Wheel3());
 				if (cvar.visual_spawn_num)
 				{
 					char str[32];
 					sprintf(str, "%d", i);
-					int label_size = ImGui::CalcTextSize(str, NULL, true).x;
-					ImGui::GetCurrentWindow()->DrawList->AddRect({ (float)xx - label_size / 2 - 2, (float)yy - 15 - flRadius }, { (float)xx - label_size / 2 + label_size + 3, (float)yy - 1 - flRadius }, Wheel1());
-					ImGui::GetCurrentWindow()->DrawList->AddText({ (float)xx - label_size / 2, (float)yy - 16 - flRadius }, White(), str);
+					float label_size = IM_ROUND(ImGui::CalcTextSize(str, NULL, true).x / 2);
+					ImGui::GetCurrentWindow()->DrawList->AddRect({ IM_ROUND(SpawnTo[0]) - label_size - 2, IM_ROUND(SpawnTo[1]) - 15 - IM_ROUND((IM_ROUND(SpawnFrom[1]) - IM_ROUND(SpawnTo[1])) / 10) }, { IM_ROUND(SpawnTo[0]) + label_size + 3, IM_ROUND(SpawnTo[1]) - 1 - IM_ROUND((IM_ROUND(SpawnFrom[1]) - IM_ROUND(SpawnTo[1])) / 10) }, Wheel1());
+					ImGui::GetCurrentWindow()->DrawList->AddText({ IM_ROUND(SpawnTo[0]) - label_size, IM_ROUND(SpawnTo[1]) - 16 - IM_ROUND((IM_ROUND(SpawnFrom[1]) - IM_ROUND(SpawnTo[1])) / 10) }, White(), str);
 				}
 			}
 		}

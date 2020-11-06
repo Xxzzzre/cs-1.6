@@ -3,7 +3,7 @@
 
 extern bool loadtexturemodel;
 extern char sServerName[256];
-void Skins(struct cl_entity_s* ent);
+void SetSkins(struct cl_entity_s* ent);
 void GetTextureModel();
 
 #endif

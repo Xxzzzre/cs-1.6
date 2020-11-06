@@ -277,6 +277,9 @@ void CVARlist::init()
 
 	INITCVAR(model_scan, 0.0);
 
+	INITCVAR(afk_anti, 0.0);
+	INITCVAR(afk_time, 89.0);
+
 	INITCVAR(id1, 1.0);
 	INITCVAR(id2, 2.0);
 	INITCVAR(id3, 3.0);

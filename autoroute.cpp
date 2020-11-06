@@ -873,21 +873,17 @@ void DrawRouteLine()
 		{
 			float vecScreenMin[2], vecScreenMax[2];
 			if (WorldToScreen(Route.RoutePos1, vecScreenMin) && WorldToScreen(Route.RoutePos2, vecScreenMax))
-			{
-				int x = vecScreenMin[0], y = vecScreenMin[1], xx = vecScreenMax[0], yy = vecScreenMax[1];
-				ImGui::GetCurrentWindow()->DrawList->AddLine({ (float)x, (float)y }, { (float)xx, (float)yy }, Wheel1());
-			}
+				ImGui::GetCurrentWindow()->DrawList->AddLine({ IM_ROUND(vecScreenMin[0]), IM_ROUND(vecScreenMin[1]) }, { IM_ROUND(vecScreenMax[0]), IM_ROUND(vecScreenMax[1]) }, Wheel1());
 		}
 		if (Route.Draw2)
 		{
 			float vecScreenMin[2];
 			if (WorldToScreen(Route.RoutePos3, vecScreenMin))
 			{
-				int label_size = ImGui::CalcTextSize(Route.str, NULL, true).x;
-				int x = vecScreenMin[0], y = vecScreenMin[1];
-				ImGui::GetCurrentWindow()->DrawList->AddRect({ (float)x - label_size / 2 - 2, (float)y - 24 }, { (float)x - label_size / 2 + label_size + 3, (float)y - 10 }, Wheel1());
-				ImGui::GetCurrentWindow()->DrawList->AddText({ (float)x - label_size / 2, (float)y - 25 }, White(), Route.str);
-				ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ (float)x - 1, (float)y - 1 }, { (float)x + 2, (float)y + 2 }, Wheel2());
+				float label_size = IM_ROUND(ImGui::CalcTextSize(Route.str, NULL, true).x / 2);
+				ImGui::GetCurrentWindow()->DrawList->AddRect({ IM_ROUND(vecScreenMin[0]) - label_size - 2, IM_ROUND(vecScreenMin[1]) - 24 }, { IM_ROUND(vecScreenMin[0]) + label_size + 3, IM_ROUND(vecScreenMin[1]) - 10 }, Wheel1());
+				ImGui::GetCurrentWindow()->DrawList->AddText({ IM_ROUND(vecScreenMin[0]) - label_size, IM_ROUND(vecScreenMin[1]) - 25 }, White(), Route.str);
+				ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ IM_ROUND(vecScreenMin[0]) - 1, IM_ROUND(vecScreenMin[1]) - 1 }, { IM_ROUND(vecScreenMin[0]) + 2, IM_ROUND(vecScreenMin[1]) + 2 }, Wheel2());
 			}
 		}
 	}

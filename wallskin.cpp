@@ -226,7 +226,7 @@ void WallRun()
 		AutoLoadfile(), autoloadwall = false;
 
 	cl_entity_s* ent = g_Engine.GetEntityByIndex(0);
-	if (!ent || !ent->model)
+	if (!ent || !ent->model || !gamerunning)
 		return;
 
 	if (CheckDrawEngine() && cvar.visual_skins_wall)

@@ -4,12 +4,12 @@
 typedef struct
 {
 	Vector HitboxMulti[8];
-} playeresphitboxmulti_t;
-extern deque<playeresphitboxmulti_t> PlayerEspHitboxMulti[33];
+} playeresphitbox_t;
 
 typedef struct
 {
 	cl_entity_s* ent;
+	deque<playeresphitbox_t> PlayerEspHitbox;
 } playeresp_t;
 extern deque<playeresp_t> PlayerEsp;
 

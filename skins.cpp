@@ -610,7 +610,7 @@ void ScanForTextureIndex(cl_entity_s* ent, char* texturename, int& index)
 	}
 }
 
-void Skins(struct cl_entity_s* ent)
+void SetSkins(struct cl_entity_s* ent)
 {
 	static char CurrentServerName[256];
 	if (strcmp(CurrentServerName, sServerName))

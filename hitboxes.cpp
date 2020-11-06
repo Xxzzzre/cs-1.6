@@ -9,6 +9,7 @@ deque<playerhitboxnum_t> PlayerHitboxNum;
 
 int HeadBox[33];
 int HitboxBone[33];
+
 void VectorTransform(Vector in1, float in2[3][4], float* out)
 {
 	out[0] = in1.Dot(in2[0]) + in2[0][3];
@@ -35,7 +36,7 @@ string getfilename(string path)
 	return path.substr(0, dot_i);
 }
 
-void Skeleton(cl_entity_s* ent)
+void GetHitboxes(cl_entity_s* ent)
 {
 	if (ent && ent->model && ent->model->name)
 	{
@@ -93,7 +94,9 @@ void Skeleton(cl_entity_s* ent)
 			if (CheckDrawEngine() && cvar.skeleton_view_model_bone && pBoneMatrix && pbones)
 			{
 				glPushMatrix();
-				glDisable(GL_TEXTURE_2D);
+				glDisable(GL_TEXTURE_2D); 
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				for (unsigned int i = 0; i < pStudioHeader->numbones; i++)
 				{
 					if (pbones[i].parent >= 0)
@@ -129,6 +132,8 @@ void Skeleton(cl_entity_s* ent)
 			{
 				glPushMatrix();
 				glDisable(GL_TEXTURE_2D);
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				for (unsigned int i = 0; i < pStudioHeader->numhitboxes; i++)
 				{
 					Vector vCubePointsTrans[8], vCubePoints[8];
@@ -169,6 +174,11 @@ void Skeleton(cl_entity_s* ent)
 
 	if (ent && ent->player)
 	{
+		spawn_t Spawns;
+		Spawns.index = ent->index;
+		Spawns.Origin = ent->origin;
+		Spawn.push_back(Spawns);
+
 		model_t* pModel = g_Studio.SetupPlayerModel(ent->index - 1);
 		if (!pModel)
 			return;
@@ -240,13 +250,12 @@ void Skeleton(cl_entity_s* ent)
 			playeraim_t Aim;
 			playeraimhitbox_t AimHitbox;
 			playeresp_t Esp;
-			playeresphitboxmulti_t EspHitboxMulti;
+			playeresphitbox_t EspHitbox;
 
+			Esp.ent = ent;
 			Aim.ent = ent;
 			sprintf(Aim.modelname, pModel->name);
 			
-			Esp.ent = ent;
-
 			int numhitboxes = 0;
 			for (unsigned int i = 0; i < pStudioHeader->numhitboxes; i++)
 			{
@@ -268,35 +277,39 @@ void Skeleton(cl_entity_s* ent)
 
 				if (!IsSHield(vCubePointsTrans))
 				{
-					HitboxesNum.HitboxPos = (vBBMax + vBBMin) * 0.5f;
-					HitboxesNum.Hitbox = i;
+					if (cvar.visual_model_hitbox)
+					{
+						HitboxesNum.HitboxPos = (vBBMax + vBBMin) * 0.5f;
+						HitboxesNum.Hitbox = i;
+						PlayerHitboxNum.push_back(HitboxesNum);
+					}
 
-					AimHitbox.Hitbox = (vBBMax + vBBMin) * 0.5f;
-					AimHitbox.HitboxFOV = g_Local.vPrevForward.AngleBetween(AimHitbox.Hitbox - vEye);
+					if (cvar.skeleton_player_hitbox)
+					{
+						Hitboxes.index = ent->index;
+						for (unsigned int x = 0; x < 8; x++)
+							Hitboxes.vCubePointsTrans[x] = vCubePointsTrans[x];
+						PlayerHitbox.push_back(Hitboxes);
+					}
 
-					Hitboxes.index = ent->index;
+					for (unsigned int x = 0; x < 8; x++)
+						EspHitbox.HitboxMulti[x] = vCubePointsTrans[x];
+					Esp.PlayerEspHitbox.push_back(EspHitbox);
+
 					for (unsigned int x = 0; x < 8; x++)
 					{
-						Hitboxes.vCubePointsTrans[x] = vCubePointsTrans[x];
-
 						AimHitbox.HitboxMulti[x] = vCubePointsTrans[x];
 						AimHitbox.HitboxPointsFOV[x] = g_Local.vPrevForward.AngleBetween(AimHitbox.HitboxMulti[x] - vEye);
-
-						EspHitboxMulti.HitboxMulti[x] = vCubePointsTrans[x];
 					}
-					PlayerHitbox.push_back(Hitboxes);
-
-					PlayerHitboxNum.push_back(HitboxesNum);
-
-					PlayerAimHitbox[ent->index].push_back(AimHitbox);
-
-					PlayerEspHitboxMulti[ent->index].push_back(EspHitboxMulti);
+					AimHitbox.Hitbox = (vBBMax + vBBMin) * 0.5f;
+					AimHitbox.HitboxFOV = g_Local.vPrevForward.AngleBetween(AimHitbox.Hitbox - vEye);
+					Aim.PlayerAimHitbox.push_back(AimHitbox);
 
 					numhitboxes++;
 				}
 			}
-			PlayerAim.push_back(Aim);
 			PlayerEsp.push_back(Esp);
+			PlayerAim.push_back(Aim);
 
 			if (cvar.model_scan)
 			{
@@ -332,35 +345,29 @@ void DrawSkeletonPlayer()
 		else Player = White();
 		float CalcAnglesMin[2], CalcAnglesMax[2];
 		if (WorldToScreen(Bones.vBone, CalcAnglesMin) && WorldToScreen(Bones.vBoneParent, CalcAnglesMax))
-			ImGui::GetCurrentWindow()->DrawList->AddLine({ CalcAnglesMin[0], CalcAnglesMin[1] }, { CalcAnglesMax[0], CalcAnglesMax[1] }, Player);
+			ImGui::GetCurrentWindow()->DrawList->AddLine({ IM_ROUND(CalcAnglesMin[0]), IM_ROUND(CalcAnglesMin[1]) }, { IM_ROUND(CalcAnglesMax[0]), IM_ROUND(CalcAnglesMax[1]) }, Player);
 	}
-	if (cvar.skeleton_player_hitbox)
+	for (playerhitbox_t Hitbox : PlayerHitbox)
 	{
-		for (playerhitbox_t Hitbox : PlayerHitbox)
+		ImColor Player;
+		if (g_Player[Hitbox.index].iTeam == 1) Player = Red();
+		else if (g_Player[Hitbox.index].iTeam == 2) Player = Blue();
+		else Player = White();
+		for (unsigned int x = 0; x < 12; x++)
 		{
-			ImColor Player;
-			if (g_Player[Hitbox.index].iTeam == 1) Player = Red();
-			else if (g_Player[Hitbox.index].iTeam == 2) Player = Blue();
-			else Player = White();
-			for (unsigned int x = 0; x < 12; x++)
-			{
-				float CalcAnglesMin[2], CalcAnglesMax[2];
-				if (WorldToScreen(Hitbox.vCubePointsTrans[SkeletonHitboxMatrix[x][0]], CalcAnglesMin) && WorldToScreen(Hitbox.vCubePointsTrans[SkeletonHitboxMatrix[x][1]], CalcAnglesMax))
-					ImGui::GetCurrentWindow()->DrawList->AddLine({ CalcAnglesMin[0], CalcAnglesMin[1] }, { CalcAnglesMax[0], CalcAnglesMax[1] }, Player);
-			}
+			float CalcAnglesMin[2], CalcAnglesMax[2];
+			if (WorldToScreen(Hitbox.vCubePointsTrans[SkeletonHitboxMatrix[x][0]], CalcAnglesMin) && WorldToScreen(Hitbox.vCubePointsTrans[SkeletonHitboxMatrix[x][1]], CalcAnglesMax))
+				ImGui::GetCurrentWindow()->DrawList->AddLine({ IM_ROUND(CalcAnglesMin[0]), IM_ROUND(CalcAnglesMin[1]) }, { IM_ROUND(CalcAnglesMax[0]), IM_ROUND(CalcAnglesMax[1]) }, Player);
 		}
 	}
-	if (cvar.visual_model_hitbox)
+	for (playerhitboxnum_t HitboxNum : PlayerHitboxNum)
 	{
-		for (playerhitboxnum_t HitboxNum : PlayerHitboxNum)
+		float CalcAnglesMin[2];
+		if (WorldToScreen(HitboxNum.HitboxPos, CalcAnglesMin))
 		{
-			float CalcAnglesMin[2];
-			if (WorldToScreen(HitboxNum.HitboxPos, CalcAnglesMin))
-			{
-				char str[256];
-				sprintf(str, "%d", HitboxNum.Hitbox);
-				ImGui::GetCurrentWindow()->DrawList->AddText({ CalcAnglesMin[0], CalcAnglesMin[1] }, White(), str);
-			}
+			char str[256];
+			sprintf(str, "%d", HitboxNum.Hitbox);
+			ImGui::GetCurrentWindow()->DrawList->AddText({ IM_ROUND(CalcAnglesMin[0]), IM_ROUND(CalcAnglesMin[1]) }, White(), str);
 		}
 	}
 }
@@ -373,20 +380,20 @@ void DrawSkeletonWorld()
 		{
 			float CalcAnglesMin[2], CalcAnglesMax[2];
 			if (WorldToScreen(Bones.vBone, CalcAnglesMin) && WorldToScreen(Bones.vBoneParent, CalcAnglesMax))
-				ImGui::GetCurrentWindow()->DrawList->AddLine({ CalcAnglesMin[0], CalcAnglesMin[1] }, { CalcAnglesMax[0], CalcAnglesMax[1] }, Wheel2());
+				ImGui::GetCurrentWindow()->DrawList->AddLine({ IM_ROUND(CalcAnglesMin[0]), IM_ROUND(CalcAnglesMin[1]) }, { IM_ROUND(CalcAnglesMax[0]), IM_ROUND(CalcAnglesMax[1]) }, Wheel2());
 			if (Bones.parent != -1)
 			{
 				if (WorldToScreen(Bones.vBoneParent, CalcAnglesMin))
-					ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ CalcAnglesMin[0] - 1, CalcAnglesMin[1] - 1 }, { CalcAnglesMin[0] + 2, CalcAnglesMin[1] + 2 }, Wheel1());
+					ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ IM_ROUND(CalcAnglesMin[0]) - 1, IM_ROUND(CalcAnglesMin[1]) - 1 }, { IM_ROUND(CalcAnglesMin[0]) + 2, IM_ROUND(CalcAnglesMin[1]) + 2 }, Wheel1());
 			}
 			if (WorldToScreen(Bones.vBone, CalcAnglesMin))
-				ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ CalcAnglesMin[0] - 1, CalcAnglesMin[1] - 1 }, { CalcAnglesMin[0] + 2, CalcAnglesMin[1] + 2 }, Wheel1());
+				ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ IM_ROUND(CalcAnglesMin[0]) - 1, IM_ROUND(CalcAnglesMin[1]) - 1 }, { IM_ROUND(CalcAnglesMin[0]) + 2, IM_ROUND(CalcAnglesMin[1]) + 2 }, Wheel1());
 		}
 		else
 		{
 			float CalcAnglesMin[2];
 			if (WorldToScreen(Bones.vBone, CalcAnglesMin))
-				ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ CalcAnglesMin[0] - 1, CalcAnglesMin[1] - 1 }, { CalcAnglesMin[0] + 2, CalcAnglesMin[1] + 2 }, Wheel1());
+				ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ IM_ROUND(CalcAnglesMin[0]) - 1, IM_ROUND(CalcAnglesMin[1]) - 1 }, { IM_ROUND(CalcAnglesMin[0]) + 2, IM_ROUND(CalcAnglesMin[1]) + 2 }, Wheel1());
 		}
 	}
 
@@ -396,13 +403,13 @@ void DrawSkeletonWorld()
 		{
 			float CalcAnglesMin[2], CalcAnglesMax[2];
 			if (WorldToScreen(Hitbox.vCubePointsTrans[SkeletonHitboxMatrix[i][0]], CalcAnglesMin) && WorldToScreen(Hitbox.vCubePointsTrans[SkeletonHitboxMatrix[i][1]], CalcAnglesMax))
-				ImGui::GetCurrentWindow()->DrawList->AddLine({ CalcAnglesMin[0], CalcAnglesMin[1] }, { CalcAnglesMax[0], CalcAnglesMax[1] }, Wheel1());
+				ImGui::GetCurrentWindow()->DrawList->AddLine({ IM_ROUND(CalcAnglesMin[0]), IM_ROUND(CalcAnglesMin[1]) }, { IM_ROUND(CalcAnglesMax[0]), IM_ROUND(CalcAnglesMax[1]) }, Wheel1());
 		}
 		for (unsigned int i = 0; i < 8; i++)
 		{
 			float CalcAnglesMin[2];
 			if (WorldToScreen(Hitbox.vCubePointsTrans[i], CalcAnglesMin))
-				ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ CalcAnglesMin[0] - 1, CalcAnglesMin[1] - 1 }, { CalcAnglesMin[0] + 2, CalcAnglesMin[1] + 2 }, Wheel2());
+				ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ IM_ROUND(CalcAnglesMin[0]) - 1, IM_ROUND(CalcAnglesMin[1]) - 1 }, { IM_ROUND(CalcAnglesMin[0]) + 2, IM_ROUND(CalcAnglesMin[1]) + 2 }, Wheel2());
 		}
 	}
 }

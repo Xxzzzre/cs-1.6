@@ -62,31 +62,14 @@ void StrafeHack(struct usercmd_s* cmd)
 			Vector ViewAngles;
 			g_Engine.GetViewAngles(ViewAngles);
 			ViewAngles.y += dir;
-			float vspeed[3] = { pmove->velocity.x / pmove->velocity.Length(),pmove->velocity.y / pmove->velocity.Length(),0.0f };
+			float vspeed[3] = { pmove->velocity.x / pmove->velocity.Length(),pmove->velocity.y / pmove->velocity.Length(), 0.0f };
 			float va_speed = YawForVec(vspeed);
 			float adif = va_speed - ViewAngles.y;
 			while (adif < -180)adif += 360;
 			while (adif > 180)adif -= 360;
 			cmd->sidemove = (437.8928) * (adif > 0 ? 1 : -1);
 			cmd->forwardmove = 0;
-			bool onlysidemove = (abs(adif) >= atan(30.f / sqrt(POW(pmove->velocity[0]) + POW(pmove->velocity[1]))) / M_PI * 180);
-			cmd->viewangles[1] -= (-adif);
-			float fs = 0;
-			if (!onlysidemove)
-			{
-				static float lv = 0;
-				Vector fw = g_Local.vPostForward; fw[2] = 0; fw = fw.Normalize();
-				float vel = POW(fw[0] * pmove->velocity[0]) + POW(fw[1] * pmove->velocity[1]);
-
-				fs = lv;
-				lv = sqrt(69.f * 100000 / vel);
-				static float lastang = 0;
-				float ca = abs(adif);
-				lastang = ca;
-			}
-
-			float ang = atan(fs / cmd->sidemove) / M_PI * 180;
-			cmd->viewangles.y += ang;
+			cmd->viewangles.y -= (-adif);
 
 			float sdmw = cmd->sidemove;
 			float fdmw = cmd->forwardmove;
@@ -477,37 +460,26 @@ void DrawLongJump()
 		float VecScreenMin[2];
 		float VecScreenMax[2];
 		if (WorldToScreen(Strafe.Pos1, VecScreenMin) && WorldToScreen(Strafe.Pos2, VecScreenMax))
-		{
-			int x = VecScreenMin[0], y = VecScreenMin[1], xx = VecScreenMax[0], yy = VecScreenMax[1];
-			ImGui::GetCurrentWindow()->DrawList->AddLine({ (float)x, (float)y }, { (float)xx, (float)yy }, Wheel1());
-		}
+			ImGui::GetCurrentWindow()->DrawList->AddLine({ IM_ROUND(VecScreenMin[0]), IM_ROUND(VecScreenMin[1]) }, { IM_ROUND(VecScreenMax[0]), IM_ROUND(VecScreenMax[1]) }, Wheel1());
+
+		if (WorldToScreen(Strafe.Pos1, VecScreenMin))
+			ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ IM_ROUND(VecScreenMin[0]) - 1, IM_ROUND(VecScreenMin[1]) - 1 }, { IM_ROUND(VecScreenMin[0]) + 2, IM_ROUND(VecScreenMin[1]) + 2 }, Wheel2());
+
+		if (WorldToScreen(Strafe.Pos2, VecScreenMax))
+			ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ IM_ROUND(VecScreenMax[0]) - 1, IM_ROUND(VecScreenMax[1]) - 1 }, { IM_ROUND(VecScreenMax[0]) + 2, IM_ROUND(VecScreenMax[1]) + 2 }, Wheel2());
 
 		if (WorldToScreen(Strafe.Pos1, VecScreenMin))
 		{
-			int x = VecScreenMin[0], y = VecScreenMin[1];
-			ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ (float)x - 1, (float)y - 1 }, { (float)x + 2, (float)y + 2 }, Wheel2());
+			float label_size = IM_ROUND(ImGui::CalcTextSize("Start", NULL, true).x / 2);
+			ImGui::GetCurrentWindow()->DrawList->AddRect({ IM_ROUND(VecScreenMin[0]) - label_size - 2, IM_ROUND(VecScreenMin[1]) - 24 }, { IM_ROUND(VecScreenMin[0]) + label_size + 3, IM_ROUND(VecScreenMin[1]) - 10 }, Wheel1());
+			ImGui::GetCurrentWindow()->DrawList->AddText({ IM_ROUND(VecScreenMin[0]) - label_size, IM_ROUND(VecScreenMin[1]) - 25 }, White(), "Start");
 		}
 
 		if (WorldToScreen(Strafe.Pos2, VecScreenMax))
 		{
-			int x = VecScreenMax[0], y = VecScreenMax[1];
-			ImGui::GetCurrentWindow()->DrawList->AddRectFilled({ (float)x - 1, (float)y - 1 }, { (float)x + 2, (float)y + 2 }, Wheel2());
-		}
-
-		if (WorldToScreen(Strafe.Pos1, VecScreenMin))
-		{
-			int label_size = ImGui::CalcTextSize("Start", NULL, true).x;
-			int x = VecScreenMin[0], y = VecScreenMin[1];
-			ImGui::GetCurrentWindow()->DrawList->AddRect({ (float)x - label_size / 2 - 2, (float)y - 24 }, { (float)x - label_size / 2 + label_size + 3, (float)y - 10 }, Wheel1());
-			ImGui::GetCurrentWindow()->DrawList->AddText({ (float)x - label_size / 2, (float)y - 25 }, White(), "Start");
-		}
-
-		if (WorldToScreen(Strafe.Pos2, VecScreenMax))
-		{
-			int label_size = ImGui::CalcTextSize("Stop", NULL, true).x;
-			int x = VecScreenMax[0], y = VecScreenMax[1];
-			ImGui::GetCurrentWindow()->DrawList->AddRect({ (float)x - label_size / 2 - 2, (float)y - 24 }, { (float)x - label_size / 2 + label_size + 3, (float)y - 10 }, Wheel1());
-			ImGui::GetCurrentWindow()->DrawList->AddText({ (float)x - label_size / 2, (float)y - 25 }, White(), "Stop");
+			float label_size = IM_ROUND(ImGui::CalcTextSize("Stop", NULL, true).x / 2);
+			ImGui::GetCurrentWindow()->DrawList->AddRect({ IM_ROUND(VecScreenMax[0]) - label_size - 2, IM_ROUND(VecScreenMax[1]) - 24 }, { IM_ROUND(VecScreenMax[0]) + label_size + 3, IM_ROUND(VecScreenMax[1]) - 10 }, Wheel1());
+			ImGui::GetCurrentWindow()->DrawList->AddText({ IM_ROUND(VecScreenMax[0]) - label_size, IM_ROUND(VecScreenMax[1]) - 25 }, White(), "Stop");
 		}
 	}
 }

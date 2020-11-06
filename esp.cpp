@@ -1,41 +1,40 @@
 #include "client.h"
 
 deque<playeresp_t> PlayerEsp;
-deque<playeresphitboxmulti_t> PlayerEspHitboxMulti[33];
 
 void Box(float x, float y, float w, float h, ImU32 team)
 {
 	if (!cvar.visual_box) return;
-	ImGui::GetCurrentWindow()->DrawList->AddRect({ x, y }, { x + w, y + h - 1 }, team);
+	ImGui::GetCurrentWindow()->DrawList->AddRect({ x, y }, { x + w, y + h }, team);
 }
 
 void Health(int id, float x, float y, float h)
 {
 	if (!cvar.visual_health) return;
 	int hp = g_Player[id].iHealth;
-	if (hp < 10)
-		hp = 10;
-	else if (hp > 100)
-		hp = 100;
-	if (hp > 99) ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y                    }, { x - 1, y + h / 100.f * 10.f - 1 }, ImColor(0.1f, 1.0f, 0.0f, 1.0f));
-	if (hp > 89) ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y + h / 100.f * 10.f }, { x - 1, y + h / 100.f * 20.f - 1 }, ImColor(0.2f, 0.9f, 0.0f, 1.0f));
-	if (hp > 79) ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y + h / 100.f * 20.f }, { x - 1, y + h / 100.f * 30.f - 1 }, ImColor(0.3f, 0.8f, 0.0f, 1.0f));
-	if (hp > 69) ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y + h / 100.f * 30.f }, { x - 1, y + h / 100.f * 40.f - 1 }, ImColor(0.4f, 0.7f, 0.0f, 1.0f));
-	if (hp > 59) ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y + h / 100.f * 40.f }, { x - 1, y + h / 100.f * 50.f - 1 }, ImColor(0.5f, 0.6f, 0.0f, 1.0f));
-	if (hp > 49) ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y + h / 100.f * 50.f }, { x - 1, y + h / 100.f * 60.f - 1 }, ImColor(0.6f, 0.5f, 0.0f, 1.0f));
-	if (hp > 39) ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y + h / 100.f * 60.f }, { x - 1, y + h / 100.f * 70.f - 1 }, ImColor(0.7f, 0.4f, 0.0f, 1.0f));
-	if (hp > 29) ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y + h / 100.f * 70.f }, { x - 1, y + h / 100.f * 80.f - 1 }, ImColor(0.8f, 0.3f, 0.0f, 1.0f));
-	if (hp > 19) ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y + h / 100.f * 80.f }, { x - 1, y + h / 100.f * 90.f - 1 }, ImColor(0.9f, 0.2f, 0.0f, 1.0f));
-	if (hp > 9)  ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y + h / 100.f * 90.f }, { x - 1, y + h - 1                }, ImColor(1.0f, 0.1f, 0.0f, 1.0f));
+	if (hp < 10) hp = 10;
+	else if (hp > 100) hp = 100;
+
+	for (unsigned int i = 0; i < 10; i++)
+	{
+		if (hp > 99 - (10 * i))
+			ImGui::GetCurrentWindow()->DrawList->AddRect({ x - 7, y + h / 100.f * 10.f * i }, { x - 1, y + h / 100.f * 10.f * (i + 1) }, ImColor(0.1f * (i + 1), 1.f - (0.1f * i), 0.0f, 1.0f));
+	}
+}
+
+void Vip(int id, float x, float y, float w)
+{
+	if (!cvar.visual_vip || !g_Player[id].bVip) return;
+	ImGui::GetCurrentWindow()->DrawList->AddImage((GLuint*)texture_id[VIP], { x, y - w }, { x + w, y });
 }
 
 bool Reload(cl_entity_s* ent, float x, float y, ImU32 team, ImU32 green)
 {
 	int seqinfo = Cstrike_SequenceInfo[ent->curstate.sequence];
 	if (!cvar.visual_reload_bar || seqinfo != 2) return false;
-	int label_size = ImGui::CalcTextSize("Reloading", NULL, true).x;
-	ImGui::GetCurrentWindow()->DrawList->AddRect({ x - label_size / 2 - 2, y - 15 }, { x + label_size / 2 + 3 , y - 1 }, team);
-	ImGui::GetCurrentWindow()->DrawList->AddText({ x - label_size / 2, y - 16 }, green, "Reloading");
+	float label_size = IM_ROUND(ImGui::CalcTextSize("Reloading", NULL, true).x / 2);
+	ImGui::GetCurrentWindow()->DrawList->AddRect({ x - label_size - 2, y - 15 }, { x + label_size + 3 , y - 1 }, team);
+	ImGui::GetCurrentWindow()->DrawList->AddText({ x - label_size, y - 16 }, green, "Reloading");
 	return true;
 }
 
@@ -44,9 +43,9 @@ bool Name(int id, float x, float y, ImU32 team, ImU32 white)
 	if (!cvar.visual_name) return false;
 	player_info_s* player = g_Studio.PlayerInfo(id - 1);
 	if (!player || !(lstrlenA(player->name) > 0)) return false;
-	int label_size = ImGui::CalcTextSize(player->name, NULL, true).x;
-	ImGui::GetCurrentWindow()->DrawList->AddRect({ x - label_size / 2 - 2, y - 15 }, { x + label_size / 2 + 3 , y - 1 }, team);
-	ImGui::GetCurrentWindow()->DrawList->AddText({ x - label_size / 2, y - 16 }, white, player->name);
+	float label_size = IM_ROUND(ImGui::CalcTextSize(player->name, NULL, true).x / 2);
+	ImGui::GetCurrentWindow()->DrawList->AddRect({ x - label_size - 2, y - 15 }, { x + label_size + 3 , y - 1 }, team);
+	ImGui::GetCurrentWindow()->DrawList->AddText({ x - label_size, y - 16 }, white, player->name);
 	return true;
 }
 
@@ -55,9 +54,9 @@ bool Model(int id, float x, float y, ImU32 team, ImU32 white)
 	if (!cvar.visual_model) return false;
 	player_info_s* player = g_Studio.PlayerInfo(id - 1);
 	if (!player || !(lstrlenA(player->model) > 0)) return false;
-	int label_size = ImGui::CalcTextSize(player->model, NULL, true).x;
-	ImGui::GetCurrentWindow()->DrawList->AddRect({ x - label_size / 2 - 2, y - 15 }, { x + label_size / 2 + 3 , y - 1 }, team);
-	ImGui::GetCurrentWindow()->DrawList->AddText({ x - label_size / 2, y - 16 }, white, player->model);
+	float label_size = IM_ROUND(ImGui::CalcTextSize(player->model, NULL, true).x / 2);
+	ImGui::GetCurrentWindow()->DrawList->AddRect({ x - label_size - 2, y - 15 }, { x + label_size + 3 , y - 1 }, team);
+	ImGui::GetCurrentWindow()->DrawList->AddText({ x - label_size, y - 16 }, white, player->model);
 	return true;
 }
 
@@ -67,25 +66,19 @@ bool Weapon(cl_entity_s* ent, float x, float y, ImU32 team, ImU32 white)
 	if (!cvar.visual_weapon || !mdl) return false;
 	char weapon[256];
 	sprintf(weapon, getfilename(mdl->name).c_str() + 2);
-	int label_size = ImGui::CalcTextSize(weapon, NULL, true).x;
-	ImGui::GetCurrentWindow()->DrawList->AddRect({ x - label_size / 2 - 2, y - 15 }, { x + label_size / 2 + 3 , y - 1 }, team);
-	ImGui::GetCurrentWindow()->DrawList->AddText({ x - label_size / 2, y - 16 }, white, weapon);
+	float label_size = IM_ROUND(ImGui::CalcTextSize(weapon, NULL, true).x / 2);
+	ImGui::GetCurrentWindow()->DrawList->AddRect({ x - label_size - 2, y - 15 }, { x + label_size + 3 , y - 1 }, team);
+	ImGui::GetCurrentWindow()->DrawList->AddText({ x - label_size, y - 16 }, white, weapon);
 	return true;
 }
 
-void Vip(int id, float x, float y, float w)
-{
-	if (!cvar.visual_vip || !g_Player[id].bVip) return;
-	ImGui::GetCurrentWindow()->DrawList->AddImage((GLuint*)texture_id[VIP], { x, y - w }, { x + w, y });
-}
-
-bool bCalcScreen(cl_entity_s* ent, int& x, int& y, int& w, int& h, int& xo)
+bool bCalcScreen(playeresp_t Esp, float& x, float& y, float& w, float& h, float& xo)
 {
 	float vOrigin[2];
-	if (!WorldToScreen(ent->origin, vOrigin)) return false;
-	xo = vOrigin[0];
-	int x0 = vOrigin[0], x1 = vOrigin[0], y0 = vOrigin[1], y1 = vOrigin[1];
-	for (playeresphitboxmulti_t Hitbox : PlayerEspHitboxMulti[ent->index])
+	if (!WorldToScreen(Esp.ent->origin, vOrigin)) return false;
+	xo = IM_ROUND(vOrigin[0]);
+	float x0 = vOrigin[0], x1 = vOrigin[0], y0 = vOrigin[1], y1 = vOrigin[1];
+	for (playeresphitbox_t Hitbox : Esp.PlayerEspHitbox)
 	{
 		for (unsigned int i = 0; i < 8; i++)
 		{
@@ -97,10 +90,10 @@ bool bCalcScreen(cl_entity_s* ent, int& x, int& y, int& w, int& h, int& xo)
 			y1 = max(y1, vHitbox[1]);
 		}
 	}
-	x = x0;
-	y = y0;
-	w = x1 - x0 + 2;
-	h = y1 - y0 + 2;
+	x = IM_ROUND(x0);
+	y = IM_ROUND(y0);
+	w = IM_ROUND(x1) - IM_ROUND(x0) + 1;
+	h = IM_ROUND(y1) - IM_ROUND(y0) + 1;
 	return true;
 }
 
@@ -114,8 +107,8 @@ void DrawPlayerEsp()
 			continue;
 		if (!bAlive(Esp.ent))
 			continue;
-		int x, y, w, h, xo;
-		if (bCalcScreen(Esp.ent, x, y, w, h, xo))
+		float x, y, w, h, xo;
+		if (bCalcScreen(Esp, x, y, w, h, xo))
 		{
 			Box(x, y, w, h, Team(Esp.ent->index));
 			Health(Esp.ent->index, x, y, h);
@@ -159,7 +152,7 @@ void DrawPlayerSoundIndexEsp()
 				Vector vPointEnd(radius * cosf(i + step) + position.x, radius * sinf(i + step) + position.y, position.z);
 				float vStart[2], vEnd[2];
 				if (WorldToScreen(vPointStart, vStart) && WorldToScreen(vPointEnd, vEnd))
-					ImGui::GetCurrentWindow()->DrawList->AddLine(ImVec2(vStart[0], vStart[1]), ImVec2(vEnd[0], vEnd[1]), Team(sound_index.index));
+					ImGui::GetCurrentWindow()->DrawList->AddLine({ IM_ROUND(vStart[0]), IM_ROUND(vStart[1]) }, { IM_ROUND(vEnd[0]), IM_ROUND(vEnd[1]) }, Team(sound_index.index));
 			}
 		}
 		if (GetTickCount() - sound_index.timestamp >= 300)
@@ -171,10 +164,10 @@ void DrawPlayerSoundIndexEsp()
 		float vTop[2], vBot[2];
 		if (WorldToScreen(vPointTop, vTop) && WorldToScreen(vPointBot, vBot))
 		{
-			int h = vBot[1] - vTop[1], w = h, x = vTop[0] - w / 2, y = vTop[1];
+			float h = IM_ROUND(vBot[1]) - IM_ROUND(vTop[1]), w = h, x = IM_ROUND(vTop[0]) - IM_ROUND(w / 2), y = IM_ROUND(vTop[1]), xo = IM_ROUND(vTop[0]);
 			Box(x, y, w, h, Team(sound_index.index));
 			Health(sound_index.index, x, y, h);
-			if (Name(sound_index.index, x + w / 2, y, Team(sound_index.index), White()))
+			if (Name(sound_index.index, xo, y, Team(sound_index.index), White()))
 				y -= 15;
 			Vip(sound_index.index, x, y, w);
 		}
@@ -196,7 +189,7 @@ void DrawPlayerSoundNoIndexEsp()
 				Vector vPointEnd(radius * cosf(i + step) + position.x, radius * sinf(i + step) + position.y, position.z);
 				float vStart[2], vEnd[2];
 				if (WorldToScreen(vPointStart, vStart) && WorldToScreen(vPointEnd, vEnd))
-					ImGui::GetCurrentWindow()->DrawList->AddLine(ImVec2(vStart[0], vStart[1]), ImVec2(vEnd[0], vEnd[1]), Green());
+					ImGui::GetCurrentWindow()->DrawList->AddLine({ IM_ROUND(vStart[0]), IM_ROUND(vStart[1]) }, { IM_ROUND(vEnd[0]), IM_ROUND(vEnd[1]) }, Green());
 			}
 		}
 		if (GetTickCount() - sound_no_index.timestamp >= 300)
@@ -208,8 +201,7 @@ void DrawPlayerSoundNoIndexEsp()
 		float vTop[2], vBot[2];
 		if (WorldToScreen(vPointTop, vTop) && WorldToScreen(vPointBot, vBot))
 		{
-			int h = vBot[1] - vTop[1], w = h, x = vTop[0] - w / 2, y = vTop[1];
-			Box(x, y, w, h, Green());
+			Box(IM_ROUND(vTop[0]) - IM_ROUND((IM_ROUND(vBot[1]) - IM_ROUND(vTop[1])) / 2), IM_ROUND(vTop[1]), IM_ROUND(vBot[1]) - IM_ROUND(vTop[1]), IM_ROUND(vBot[1]) - IM_ROUND(vTop[1]), Green());
 		}
 	}
 }

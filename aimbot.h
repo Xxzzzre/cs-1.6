@@ -8,16 +8,9 @@ typedef struct
 	float b;
 	float a;
 	int Radius;
-	Vector Pos;
+	ImVec2 Pos;
 } fov_t;
 extern deque<fov_t> FOVDraw;
-
-typedef struct
-{
-	char modelname[MAX_MODEL_NAME];
-	cl_entity_s* ent;
-} playeraim_t;
-extern deque<playeraim_t> PlayerAim;
 
 typedef struct
 {
@@ -26,7 +19,23 @@ typedef struct
 	float HitboxPointsFOV[8];
 	Vector HitboxMulti[8];
 } playeraimhitbox_t;
-extern deque<playeraimhitbox_t> PlayerAimHitbox[33];
+
+typedef struct
+{
+	char modelname[MAX_MODEL_NAME];
+	deque<playeraimhitbox_t> PlayerAimHitbox;
+	cl_entity_s* ent;
+} playeraim_t;
+extern deque<playeraim_t> PlayerAim;
+
+typedef struct
+{
+	int numhitbox;
+	char displaymodel[MAX_QPATH];
+	char checkmodel[MAX_QPATH]; 
+	int m_iWeaponID;
+} playeraimlegit_t;
+extern deque<playeraimlegit_t> PlayerAimLegit;
 
 static BYTE SkeletonHitboxMatrix[12][2] = { {0,1},{1,2},{2,3},{2,4},{4,5},{5,6},{6,7},{1,5},{0,6},{3,7},{7,4},{0,3}, };
 extern DWORD dwReactionTime;

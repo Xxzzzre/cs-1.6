@@ -63,9 +63,11 @@ int DeathMsg(const char *pszName, int iSize, void *pbuf)
 	cl_entity_s* ent = g_Engine.GetEntityByIndex(victim);
 	if (ent && victim > 0 && victim <= g_Engine.GetMaxClients() && cvar.visual_spawn_scan)
 	{
-		DeadOrigin[victim] = ent->origin;
-		WasDead[victim] = true;
-		DeadTickcount[victim] = GetTickCount();
+		spawndeath_t Spawns;
+		Spawns.index = ent->index;
+		Spawns.Origin = ent->origin;
+		Spawns.Tickcount = GetTickCount();
+		SpawnDeath.push_back(Spawns);
 	}
 	KillSound(victim, killer, headshot);
 
